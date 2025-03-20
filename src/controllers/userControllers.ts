@@ -77,7 +77,7 @@ async function deleteUser(req : ProtectedRequest, res : Response) {
     
     const { password } = req.body;
 
-    const isUserPassword = bcrypt.compare(password, req.user.password)
+    const isUserPassword = await bcrypt.compare(password, req.user.password)
 
     if (!isUserPassword) {
         res.status(404).json({message: "Wrong password"})
