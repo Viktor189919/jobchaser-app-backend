@@ -59,14 +59,20 @@ async function signinUser(req : Request, res : Response) {
         return;
     }
 
-    const JWT = jwt.sign(
-        {id: user.id, password: user.password},
-        process.env.JWT_SECRET as string,
-        {expiresIn: "1hr"}
-    )
+    try {
+        const JWT = jwt.sign(
+            {id: user.id},
+            process.env.JWT_SECRET as string,
+            {expiresIn: "1h"}
+        )
 
-    res.status(200).json({message: "Signed in successfully", JWT: JWT})
-}
+        res.status(200).json({message: "Signed in successfully", JWT: JWT})
+
+        } catch (error) {
+            console.error("Error signing JWT: ", error);
+            res.status(500).json({message: "Error signing token"})
+        }
+    }
 
 async function deleteUser(req : ProtectedRequest, res : Response) {
 
