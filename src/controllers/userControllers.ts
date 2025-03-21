@@ -41,38 +41,47 @@ async function signinUser(req : Request, res : Response) {
 
     const { email, password } = req.body;
 
-    const user = await prisma.user.findUnique({
-        where: {
-            email
-        }
-    })
-
-    if (!user) {
-        res.status(404).json({message: "User not found"})
-        return
-    }
-
-    const isUserPassword = bcrypt.compare(password, user.password)
-
-    if (!isUserPassword) {
-        res.status(404).json({message: "Wrong password"})
-        return;
-    }
-
+    // Try for handling error from database call
     try {
-        const JWT = jwt.sign(
-            {id: user.id},
-            process.env.JWT_SECRET as string,
-            {expiresIn: "1h"}
-        )
 
-        res.status(200).json({message: "Signed in successfully", JWT: JWT})
+        const user = await prisma.user.findUnique({
+            where: {
+                email
+            }
+        })
+
+        if (!user) {
+            res.status(404).json({message: "User not found"})
+            return;
+        }
+
+        const isUserPassword = await bcrypt.compare(password, user.password)
+
+        if (!isUserPassword) {
+            res.status(404).json({message: "Wrong password"})
+            return;
+        }
+
+        // Try for handling signing error separately
+        try {
+            const JWT = jwt.sign(
+                {id: user.id},
+                process.env.JWT_SECRET as string,
+                {expiresIn: "1h"}
+            )
+
+            res.status(200).json({message: "Signed in successfully", JWT: JWT})
+
+            } catch (error) {
+                console.error("Error signing JWT: ", error);
+                res.status(500).json({message: "Internal server error"})
+            }
 
         } catch (error) {
-            console.error("Error signing JWT: ", error);
-            res.status(500).json({message: "Error signing token"})
+            console.error("Internal server error")
+            res.status(500).json({message: "Internal server error"})
         }
-    }
+} 
 
 async function deleteUser(req : ProtectedRequest, res : Response) {
 
