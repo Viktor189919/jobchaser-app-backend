@@ -10,13 +10,14 @@ async function createJob(req : ProtectedRequest, res : Response) {
     }
 
     const { id } = req.user
-    const { company, adExpiresAt } = req.body;
+    const { companyName, jobHeadline, companyURL } = req.body;
 
     const job = await prisma.job.create({
         data: {
             user_id: id,
-            company: company,
-            adExpiresAt: adExpiresAt
+            companyName: companyName,
+            jobHeadline: jobHeadline, 
+            companyURL: companyURL
         }
     })
 
@@ -55,33 +56,33 @@ async function getJobs(req : ProtectedRequest, res : Response) {
     res.status(200).json({message: "Jobs fetched successfully", jobs: jobs})
 }
 
-async function getJobByCompany(req : ProtectedRequest, res : Response) {
+// async function getJobByCompany(req : ProtectedRequest, res : Response) {
 
-    const { company } = req.params;
+//     const { company } = req.params;
 
-    if (!company) {
-        res.status(400).json({message: "Could not find request parameter"})
-        return;
-    }
+//     if (!company) {
+//         res.status(400).json({message: "Could not find request parameter"})
+//         return;
+//     }
 
-    const job = await prisma.job.findMany({
-        where: {
-            company: company.toString(),
-        }
-    })
+//     const job = await prisma.job.findMany({
+//         where: {
+//             company: company.toString(),
+//         }
+//     })
 
-    if (!job) {
-        res.status(500).json({message: "Error fetching jobs"});
-        return;
-    }
+//     if (!job) {
+//         res.status(500).json({message: "Error fetching jobs"});
+//         return;
+//     }
 
-    if (job.length < 1) {
-        res.status(204).json({message: "No jobs found for this user"});
-        return;
-    }
+//     if (job.length < 1) {
+//         res.status(204).json({message: "No jobs found for this user"});
+//         return;
+//     }
 
-    res.status(200).json({message: "Jobs fetched successfully", jobs: job})
-}
+//     res.status(200).json({message: "Jobs fetched successfully", jobs: job})
+// }
 
 async function deleteJobById(req : ProtectedRequest, res : Response) {
 
@@ -110,33 +111,33 @@ async function deleteJobById(req : ProtectedRequest, res : Response) {
     }      
 }
 
-async function deleteAllJobs(req : ProtectedRequest, res : Response) {
+// async function deleteAllJobs(req : ProtectedRequest, res : Response) {
 
-    if (!req.user) {
-        res.status(401).json({message: "Unauthorized, token not found"});
-        return;
-    }
+//     if (!req.user) {
+//         res.status(401).json({message: "Unauthorized, token not found"});
+//         return;
+//     }
 
-    const { id } = req.user;
+//     const { id } = req.user;
 
-    try {
-        const deletedJobs = await prisma.job.deleteMany({
-            where: {
-                user_id: id,
-            }
-        })
+//     try {
+//         const deletedJobs = await prisma.job.deleteMany({
+//             where: {
+//                 user_id: id,
+//             }
+//         })
 
-        if (!deletedJobs) {
-            res.status(404).json({message: "No jobs found"});
-            return;
-        }
+//         if (!deletedJobs) {
+//             res.status(404).json({message: "No jobs found"});
+//             return;
+//         }
 
-        res.status(200).json({message: "All jobs deleted successfully"});
+//         res.status(200).json({message: "All jobs deleted successfully"});
 
-    } catch (error) {   
-        res.status(500).json({message: "Internal server error"})
-    }
+//     } catch (error) {   
+//         res.status(500).json({message: "Internal server error"})
+//     }
 
-}
+// }
 
-export { getJobByCompany, getJobs, createJob, deleteJobById, deleteAllJobs }
+export { getJobs, createJob, deleteJobById }
