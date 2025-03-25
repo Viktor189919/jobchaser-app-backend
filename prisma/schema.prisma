@@ -28,7 +28,7 @@ model Job {
   jobtechId   String
   companyName String
   jobHeadline String
-  companyURL  String
+  companyURL  String?
   User        User   @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "user_id")
 
   @@index([user_id])
