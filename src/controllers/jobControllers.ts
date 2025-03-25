@@ -9,24 +9,32 @@ async function createJob(req : ProtectedRequest, res : Response) {
         return;
     }
 
+    console.log("Request user from createJob: ", req.user)
+    console.log("Request body from createJob: ", req.body)
+
     const { id } = req.user
-    const { companyName, jobHeadline, companyURL } = req.body;
+    const { jobtechId, companyName, jobHeadline, companyURL } = req.body;
 
-    const job = await prisma.job.create({
-        data: {
-            user_id: id,
-            companyName: companyName,
-            jobHeadline: jobHeadline, 
-            companyURL: companyURL
+    try {
+
+        const job = await prisma.job.create({
+            data: {
+                user_id: id,
+                jobtechId: jobtechId,
+                companyName: companyName,
+                jobHeadline: jobHeadline, 
+                companyURL: companyURL
+            }
+        })
+        if (!job) {
+            res.status(500).json({message: "Error creating job, please try again"});
+            return;
         }
-    })
-
-    if (!job) {
-        res.status(500).json({message: "Error creating job, please try again"});
-        return;
+    
+        res.status(201).json({message: "Job created successfully"});
+    } catch (error) {
+        console.error("Error creating job: ", error)
     }
-
-    res.status(201).json({message: "Job created successfully"});
 }
 
 async function getJobs(req : ProtectedRequest, res : Response) {
