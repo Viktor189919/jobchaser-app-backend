@@ -25,6 +25,7 @@ model User {
 model Job {
   id          String @id @default(uuid())
   user_id     String
+  jobtechId   String
   companyName String
   jobHeadline String
   companyURL  String
