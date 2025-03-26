@@ -62,25 +62,27 @@ async function signinUser(req : Request, res : Response) {
             return;
         }
 
-        // Try for handling signing error separately
-        try {
-            const JWT = jwt.sign(
-                {id: user.id},
-                process.env.JWT_SECRET as string,
-                {expiresIn: "1h"}
-            )
+        
+        const JWT = jwt.sign(
+            {id: user.id},
+            process.env.JWT_SECRET as string,
+            {expiresIn: "1h"}
+        )
 
-            res.status(200).json({message: "Signed in successfully", JWT: JWT})
+        res.cookie("jobchaserToken", JWT, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "none",
+            maxAge: 3600000
+        })
 
-            } catch (error) {
-                console.error("Error signing JWT: ", error);
-                res.status(500).json({message: "Internal server error"})
-            }
+        res.status(200).json({message: "Signed in successfully"})
 
-        } catch (error) {
-            console.error("Internal server error")
-            res.status(500).json({message: "Internal server error"})
-        }
+
+    } catch (error) {
+        console.error("Internal server error")
+        res.status(500).json({message: "Internal server error"})
+    }
 } 
 
 async function deleteUser(req : ProtectedRequest, res : Response) {
