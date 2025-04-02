@@ -9,9 +9,6 @@ async function createJob(req : ProtectedRequest, res : Response) {
         return;
     }
 
-    console.log("Request user from createJob: ", req.user)
-    console.log("Request body from createJob: ", req.body)
-
     const { id } = req.user
     const { jobtechId, companyName, jobHeadline, companyURL } = req.body;
 
