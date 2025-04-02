@@ -72,18 +72,35 @@ async function signinUser(req : Request, res : Response) {
         res.cookie("jobchaserToken", JWT, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite: "none",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
             maxAge: 3600000
         })
 
         res.status(200).json({message: "Signed in successfully"})
 
-
     } catch (error) {
-        console.error("Internal server error")
-        res.status(500).json({message: "Internal server error"})
+        console.error("Error from catch in signinUser: ", error);
+        res.status(500).json({message: "Internal server error"});
+        return;
     }
 } 
+
+async function signoutUser(req: ProtectedRequest, res: Response) {
+
+    const token = req.cookies.jobchaserToken;
+
+    if (token) {
+
+        res.clearCookie("jobchaserToken", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "none",
+        })
+    }
+
+    // The same response regardless the token is found and removed or token is not found.
+    res.status(200).json({message: "Logged out successfully"});
+}
 
 async function deleteUser(req : ProtectedRequest, res : Response) {
 
@@ -116,4 +133,4 @@ async function deleteUser(req : ProtectedRequest, res : Response) {
 
 }
 
-export { createUser, signinUser, deleteUser }
+export { createUser, signinUser, signoutUser, deleteUser }
