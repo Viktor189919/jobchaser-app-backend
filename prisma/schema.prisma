@@ -20,6 +20,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   Job       Job[]
+  User_jobs User_jobs[]
 }
 
 model Job {
@@ -30,6 +31,15 @@ model Job {
   jobHeadline String
   companyURL  String?
   User        User   @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "user_id")
+
+  @@index([user_id])
+}
+
+model User_jobs {
+    id          String @id @default(uuid())
+    user_id     String
+    jobtechId   String
+    User        User   @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "user_id")
 
   @@index([user_id])
 }
