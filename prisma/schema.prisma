@@ -5,41 +5,38 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+    provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  Job       Job[]
-  User_jobs User_jobs[]
+    id        String   @id @default(uuid())
+    email     String   @unique
+    password  String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    User_jobs User_jobs[]
 }
 
 model Job {
-  id          String @id @default(uuid())
-  user_id     String
-  jobtechId   String
-  companyName String
-  jobHeadline String
-  companyURL  String?
-  User        User   @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "user_id")
-
-  @@index([user_id])
+    id          String @id
+    companyName String
+    jobHeadline String
+    companyURL  String?
+    User_jobs   User_jobs[]
 }
 
 model User_jobs {
     id          String @id @default(uuid())
     user_id     String
-    jobtechId   String
+    job_id      String
     User        User   @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "user_id")
+    Job         Job    @relation(fields: [job_id], references: [id], onUpdate: Restrict, map: "job_id")
 
-  @@index([user_id])
+    @@index([user_id])
+    @@index([job_id])
 }
