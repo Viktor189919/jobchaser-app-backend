@@ -1,12 +1,12 @@
 import express from "express";
-import { createJob, getJobs, deleteJobById } from "../controllers/jobControllers";
+import { createUserJob, getUserJobs, deleteUserJob } from "../controllers/jobControllers";
 import authMiddleware from "../middleware/auth";
 
 const router = express.Router();
 router.use(authMiddleware)
 
-router.post("/", createJob);
-router.get("/favourites", getJobs);
-router.delete("/favourites", deleteJobById)
+router.post("/favourites", createUserJob);
+router.get("/favourites", getUserJobs);
+router.delete("/favourites", deleteUserJob)
 
 export default router;

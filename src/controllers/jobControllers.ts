@@ -2,7 +2,7 @@ import prisma from "../config/db"
 import { Response } from "express"
 import ProtectedRequest from "../types/api";
 
-async function createJob(req : ProtectedRequest, res : Response) {
+async function createUserJob(req : ProtectedRequest, res : Response) {
     
     if (!req.user) {
         res.status(401).json({ message: "Unauthorized, token not found" });
@@ -14,27 +14,55 @@ async function createJob(req : ProtectedRequest, res : Response) {
 
     try {
 
-        const job = await prisma.job.create({
-            data: {
-                user_id: id,
-                jobtechId: jobtechId,
-                companyName: companyName,
-                jobHeadline: jobHeadline, 
-                companyURL: companyURL
+        const isJob = await prisma.job.findUnique({
+            where: {
+                id: jobtechId,
             }
         })
-        if (!job) {
-            res.status(500).json({message: "Error creating job, please try again"});
-            return;
+
+        if (!isJob) {
+
+            const job = await prisma.job.create({
+                data: {
+                    id: jobtechId, 
+                    companyName: companyName, 
+                    jobHeadline: jobHeadline, 
+                    companyURL: companyURL,
+                }
+            })
         }
-    
+
+        const isUserJob = await prisma.user_jobs.findMany({
+            where: {
+                user_id: id,
+                job_id: jobtechId,
+            }
+        })
+
+        if (isUserJob.length < 1) {
+
+            const userJob = await prisma.user_jobs.create({
+                data: {
+                    user_id: id,
+                    job_id: jobtechId,
+                }
+            })
+
+            if (!userJob) {
+                res.status(500).json({message: "Error creating job, please try again"});
+                return;
+            }
+        }
+        
         res.status(201).json({message: "Job created successfully"});
+
     } catch (error) {
-        console.error("Error creating job: ", error)
+        console.error("Error creating job: ", error);
+        res.status(500).json({message: "Internal server error"});
     }
 }
 
-async function getJobs(req : ProtectedRequest, res : Response) {
+async function getUserJobs(req : ProtectedRequest, res : Response) {
 
     if (!req.user) {
         res.status(401).json({message: "Unauthorized, token not found"})
@@ -42,54 +70,33 @@ async function getJobs(req : ProtectedRequest, res : Response) {
     }
 
     const { id } = req.user;
-    
-    const jobs = await prisma.job.findMany({
-        where: {
-            user_id: id,
-        }
-    });
 
-    if (!jobs) {
-        res.status(500).json({message: "Error fetching jobs"});
-        return;
+    try {
+
+        const user = await prisma.user.findUnique({
+            where: { 
+                id: id 
+            },
+            include: {
+                User_jobs: {
+                include: {
+                    Job: true,
+                },
+                },
+            },
+        });
+          
+        const jobs = user?.User_jobs.map(job => job.Job) ?? [];
+
+        res.status(200).json({message: "Jobs fetched successfully", jobs: jobs})
+
+    } catch (error) {
+        console.error("Error from getUserJobs controller: ", error)
+        res.status(500).json({message: "Internal server error"})
     }
-
-    if (jobs.length < 1) {
-        res.status(404).json({message: "No jobs found"})
-    }
-
-    res.status(200).json({message: "Jobs fetched successfully", jobs: jobs})
 }
 
-// async function getJobByCompany(req : ProtectedRequest, res : Response) {
-
-//     const { company } = req.params;
-
-//     if (!company) {
-//         res.status(400).json({message: "Could not find request parameter"})
-//         return;
-//     }
-
-//     const job = await prisma.job.findMany({
-//         where: {
-//             company: company.toString(),
-//         }
-//     })
-
-//     if (!job) {
-//         res.status(500).json({message: "Error fetching jobs"});
-//         return;
-//     }
-
-//     if (job.length < 1) {
-//         res.status(204).json({message: "No jobs found for this user"});
-//         return;
-//     }
-
-//     res.status(200).json({message: "Jobs fetched successfully", jobs: job})
-// }
-
-async function deleteJobById(req : ProtectedRequest, res : Response) {
+async function deleteUserJob(req : ProtectedRequest, res : Response) {
 
     if (!req.user) {
         res.status(401).json({message: "Unauthorized, token not found"});
@@ -97,10 +104,11 @@ async function deleteJobById(req : ProtectedRequest, res : Response) {
     }
 
     try {
-        const job = await prisma.job.delete({
+
+        const job = await prisma.user_jobs.deleteMany({
             where: {
-                id: req.body.id,
-                user_id: req.user.id
+                user_id: req.user.id,
+                job_id: req.body.id,
             }
         });
 
@@ -145,4 +153,4 @@ async function deleteJobById(req : ProtectedRequest, res : Response) {
 
 // }
 
-export { getJobs, createJob, deleteJobById }
+export { getUserJobs, createUserJob, deleteUserJob }
